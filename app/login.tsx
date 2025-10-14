@@ -1,73 +1,68 @@
-import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import * as React from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { getUsers } from '../utils/auth';
+import { validateUser, storeLoggedUser } from './services/auth';
+import { theme } from '../assets/styles/theme';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState(''); // pour afficher l’erreur
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
 
   const handleLogin = async () => {
-    setErrorMessage(''); // reset erreur à chaque tentative
+    setErrorMessage('');
 
     if (!email || !password) {
       setErrorMessage('Veuillez remplir tous les champs.');
       return;
     }
 
-    const users = await getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
-
-    if (user) {
-      console.log('Utilisateur connecté :', user);
-      router.push('/events'); // redirection vers la liste des événements
-    } else {
-      setErrorMessage('Email ou mot de passe incorrect.');
+    try {
+      const user = await validateUser(email, password);
+      if (user) {
+        await storeLoggedUser(user);
+        Alert.alert('Connexion réussie', `Bienvenue ${user.email} !`);
+        router.push('/events'); // redirection vers liste des événements
+      } else {
+        setErrorMessage('Email ou mot de passe incorrect.');
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Erreur lors de la connexion.');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Connexion</Text>
+    <View style={theme.container}>
+      <Text style={[theme.title, {marginTop: 120}]}>Connexion</Text>
 
       <TextInput
-        style={styles.input}
+        style={theme.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
-        style={styles.input}
+        style={theme.input}
         placeholder="Mot de passe"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
-      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+      {errorMessage ? <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>{errorMessage}</Text> : null}
 
-      <Button title="Se connecter" onPress={handleLogin} />
+      <TouchableOpacity style={theme.button} onPress={handleLogin}>
+        <Text style={theme.buttonText}>Se connecter</Text>
+      </TouchableOpacity>
 
-      <Button
-        title="Pas encore inscrit ?"
-        onPress={() => router.push('/register')}
-      />
+      <TouchableOpacity style={theme.button} onPress={() => router.push('/register')}>
+        <Text style={theme.buttonText}>Pas encore inscrit ?</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 30, textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8,
-  },
-  error: { color: 'red', marginBottom: 15, textAlign: 'center' },
-});
+

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getEvents, updateEvent, Event } from '../../utils/storage';
+import { theme } from '../../assets/styles/theme';
 
 export default function EditEventScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>(); // récupère l'id depuis la route
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -23,30 +26,65 @@ export default function EditEventScreen() {
   }, [id]);
 
   const handleSave = async () => {
+    setErrorMessage('');
+    setSuccessMessage('');
+
     if (!title || !date) {
-      Alert.alert('Erreur', 'Veuillez remplir le titre et la date.');
+      setErrorMessage('Veuillez remplir le titre et la date.');
       return;
     }
 
-    const updatedEvent: Event = { id: id as string, title, description, date };
-    await updateEvent(updatedEvent);
-    Alert.alert('Événement modifié !');
-    router.back();
+    try {
+      const updatedEvent: Event = { id: id as string, title, description, date };
+      await updateEvent(updatedEvent);
+
+      setSuccessMessage('🎉 Événement modifié !');
+      setTimeout(() => router.back(), 1000);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage('Impossible de modifier l’événement.');
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Modifier l'événement</Text>
-      <TextInput placeholder="Titre" style={styles.input} value={title} onChangeText={setTitle} />
-      <TextInput placeholder="Description" style={styles.input} value={description} onChangeText={setDescription} />
-      <TextInput placeholder="Date (YYYY-MM-DD)" style={styles.input} value={date} onChangeText={setDate} />
-      <Button title="Enregistrer" onPress={handleSave} />
+    <View style={[theme.container, { justifyContent: 'center' }]}>
+      <Text style={theme.title}>Modifier l'événement</Text>
+
+      <TextInput
+        placeholder="Titre"
+        placeholderTextColor="#555"
+        style={theme.input}
+        value={title}
+        onChangeText={setTitle}
+      />
+
+      <TextInput
+        placeholder="Description"
+        placeholderTextColor="#555"
+        style={theme.input}
+        value={description}
+        onChangeText={setDescription}
+      />
+
+      <TextInput
+        placeholder="Date (YYYY-MM-DD)"
+        placeholderTextColor="#555"
+        style={theme.input}
+        value={date}
+        onChangeText={setDate}
+      />
+
+      {errorMessage ? (
+        <Text style={[theme.notParticipatedBadge, { textAlign: 'center' }]}>{errorMessage}</Text>
+      ) : null}
+
+      {successMessage ? (
+        <Text style={[theme.participatedBadge, { textAlign: 'center' }]}>{successMessage}</Text>
+      ) : null}
+
+      <TouchableOpacity style={theme.button} onPress={handleSave}>
+        <Text style={theme.buttonText}>Enregistrer</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 },
-});

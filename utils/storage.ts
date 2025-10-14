@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid'; // npm install uuid
+import uuid from 'react-native-uuid';
 
 export const EVENTS_KEY = '@events';
 
@@ -9,7 +9,7 @@ export interface Event {
   description?: string;
   date: string;       // format YYYY-MM-DD
   participated?: boolean;
-  city?: string; // optionnel, pour la météo
+  city?: string; 
 }
 
 // Récupérer tous les événements
@@ -26,7 +26,11 @@ export const saveEvents = async (events: Event[]) => {
 // Ajouter un événement avec ID unique
 export const addEvent = async (event: Omit<Event, 'id'>) => {
   const events = await getEvents();
-  const newEvent: Event = { ...event, id: uuidv4() };
+  const newEvent: Event = {
+    id: uuid.v4() as string, // génération automatique
+    ...event,
+    participated: false,
+  };
   events.push(newEvent);
   await saveEvents(events);
   console.log('Nouvel événement ajouté →', newEvent);

@@ -1,49 +1,81 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { addEvent } from '../../utils/storage';
-import { v4 as uuidv4 } from 'uuid';
+import { theme } from '../../assets/styles/theme';
 
 export default function NewEventScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSave = async () => {
-  if (!title || !date) {
-    Alert.alert('Erreur', 'Veuillez remplir le titre et la date.');
-    return;
-  }
+    setErrorMessage('');
+    setSuccessMessage('');
 
-  // Normaliser la date
-  const formattedDate = new Date(date).toISOString().split('T')[0];
+    if (!title || !date) {
+      setErrorMessage('Veuillez remplir le titre et la date.');
+      return;
+    }
 
-  // Ajouter l'événement (id sera généré dans addEvent)
-  await addEvent({
-    title,
-    description,
-    date: formattedDate,
-    participated: false
-  });
+    const formattedDate = new Date(date).toISOString().split('T')[0];
 
-  Alert.alert('Événement ajouté !');
-  router.back();
-};
+    try {
+      await addEvent({
+        title,
+        description,
+        date: formattedDate,
+        participated: false,
+      });
+
+      setSuccessMessage('🎉 Événement ajouté !');
+      setTitle('');
+      setDescription('');
+      setDate('');
+
+      setTimeout(() => router.back(), 1000);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage('Impossible d’ajouter l’événement.');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Nouvel événement</Text>
+    <View style={[theme.container, { justifyContent: 'center' }]}>
+      <Text style={theme.title}>Nouvel événement</Text>
 
-      <TextInput placeholder="Titre" style={styles.input} value={title} onChangeText={setTitle} />
-      <TextInput placeholder="Description" style={styles.input} value={description} onChangeText={setDescription} />
-      <TextInput placeholder="Date (YYYY-MM-DD)" style={styles.input} value={date} onChangeText={setDate} />
+      <TextInput
+        placeholder="Titre"
+        placeholderTextColor="#555"
+        style={theme.input}
+        value={title}
+        onChangeText={setTitle}
+      />
 
-      <Button title="Enregistrer" onPress={handleSave} />
+      <TextInput
+        placeholder="Description"
+        placeholderTextColor="#555"
+        style={theme.input}
+        value={description}
+        onChangeText={setDescription}
+      />
+
+      <TextInput
+        placeholder="Date (YYYY-MM-DD)"
+        placeholderTextColor="#555"
+        style={theme.input}
+        value={date}
+        onChangeText={setDate}
+      />
+
+      {errorMessage ? <Text style={[theme.notParticipatedBadge, { textAlign: 'center' }]}>{errorMessage}</Text> : null}
+      {successMessage ? <Text style={[theme.participatedBadge, { textAlign: 'center' }]}>{successMessage}</Text> : null}
+
+      <TouchableOpacity style={theme.button} onPress={handleSave}>
+        <Text style={theme.buttonText}>Enregistrer</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 },
-});

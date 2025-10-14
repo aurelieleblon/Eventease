@@ -1,74 +1,84 @@
-import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import * as React from 'react';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { addUser, isEmailTaken } from '../utils/auth';
+import { saveUser } from './services/auth';
+import { theme } from '../assets/styles/theme';
 
 export default function RegisterScreen() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [successMessage, setSuccessMessage] = React.useState('');
 
   const handleRegister = async () => {
-    if (!username || !email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!email || !password || !confirmPassword) {
+      setErrorMessage('Veuillez remplir tous les champs.');
       return;
     }
 
-    if (await isEmailTaken(email)) {
-      Alert.alert('Erreur', 'Cet email est déjà utilisé.');
+    if (password !== confirmPassword) {
+      setErrorMessage('Les mots de passe ne correspondent pas.');
       return;
     }
 
-    // Enregistrer l'utilisateur dans AsyncStorage
-    await addUser({ username, email, password });
-
-    Alert.alert('Inscription réussie !', `Bienvenue, ${username} !`);
-    console.log('Utilisateur inscrit :', { username, email, password });
-
-    // Redirection vers la page d'accueil
-    router.push('/');
+    try {
+      const user = await saveUser({ email, password });
+      setSuccessMessage('🎉 Vous êtes bien inscrit !');
+      setTimeout(() => router.push('/login'), 1500);
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Erreur lors de l’inscription.');
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Inscription</Text>
+    <View style={[theme.container, { justifyContent: 'center' }]}>
+      <Text style={theme.title}>Inscription</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="Nom d'utilisateur"
-        value={username}
-        onChangeText={setUsername}
-      />
-
-      <TextInput
-        style={styles.input}
+        style={theme.input}
         placeholder="Email"
+        placeholderTextColor="#555"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
-        style={styles.input}
+        style={theme.input}
         placeholder="Mot de passe"
+        placeholderTextColor="#555"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
-      <Button title="S'inscrire" onPress={handleRegister} />
+      <TextInput
+        style={theme.input}
+        placeholder="Confirmer mot de passe"
+        placeholderTextColor="#555"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+      />
+
+      {errorMessage ? <Text style={{ color: '#E53935', textAlign: 'center', marginBottom: 10 }}>{errorMessage}</Text> : null}
+      {successMessage ? <Text style={{ color: '#4CAF50', textAlign: 'center', marginBottom: 10 }}>{successMessage}</Text> : null}
+
+      <TouchableOpacity style={theme.button} onPress={handleRegister}>
+        <Text style={theme.buttonText}>S'inscrire</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[theme.button, { backgroundColor: '#4CAF50', marginTop: 10 }]}
+        onPress={() => router.push('/login')}
+      >
+        <Text style={theme.buttonText}>Déjà inscrit ?</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 30, textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8,
-  },
-});

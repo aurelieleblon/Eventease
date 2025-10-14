@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Event } from '../utils/storage';
-import { theme } from '../app/styles/theme';
+import { theme } from '../assets/styles/theme';
 
 interface Props {
   event: Event;
@@ -42,7 +42,7 @@ export default function EventItem({ event, onMarkParticipated, onDelete, onEdit 
         {onEdit && (
           <TouchableOpacity
             onPress={onEdit}
-            style={[theme.button, { flex: 1, marginRight: 5, backgroundColor: '#C49E82' }]} // nude chaud
+            style={[theme.button, { flex: 1, marginRight: 5, backgroundColor: '#6b92c0ff' }]}
           >
             <Text style={theme.buttonText}>Modifier</Text>
           </TouchableOpacity>

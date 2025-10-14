@@ -1,33 +1,23 @@
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { theme } from '../assets/styles/theme';
 
 export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bienvenue sur EventEase</Text>
-      <Text style={styles.subtitle}>Organisez et suivez vos événements facilement !</Text>
+    <View style={theme.container}>
+      <Text style={[theme.title, {marginTop: 120}]}>Bienvenue sur EventEase</Text>
+      <Text style={{ color: '#E0E1DD', fontSize: 16, marginBottom: 40, textAlign: 'center' }}>
+        Organisez et suivez vos événements facilement !
+      </Text>
 
-      <View style={styles.buttons}>
-        <Button
-          title="Se connecter"
-          onPress={() => router.push('/login')}
-        />
-      </View>
+      <TouchableOpacity style={theme.button} onPress={() => router.push('/login')}>
+        <Text style={theme.buttonText}>Se connecter</Text>
+      </TouchableOpacity>
 
-      <View style={styles.buttons}>
-        <Button
-          title="S'inscrire"
-          onPress={() => router.push('/register')}
-          color="#4CAF50"
-        />
-      </View>
+      <TouchableOpacity style={[theme.button, { backgroundColor: '#7980caff' }]} onPress={() => router.push('/register')}>
+        <Text style={theme.buttonText}>S'inscrire</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  subtitle: { fontSize: 16, marginBottom: 40, textAlign: 'center', color: '#555' },
-  buttons: { width: '80%', marginVertical: 10 },
-});

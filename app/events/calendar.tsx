@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, ScrollView, Image } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { View, Text, Modal, Pressable, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { Calendar, DateData } from 'react-native-calendars';
 import { getEvents, Event } from '../../utils/storage';
-import { getWeather } from '../../utils/weather'; // ← importe ici
+import { getWeather } from '../services/weather'; // ← importe ici
 
 export default function EventCalendarScreen() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -20,7 +20,7 @@ export default function EventCalendarScreen() {
 
     const marks: { [key: string]: { marked: boolean; dotColor: string } } = {};
     normalized.forEach(ev => {
-      marks[ev.date] = { marked: true, dotColor: ev.participated ? 'green' : 'gold' };
+      marks[ev.date] = { marked: true, dotColor: ev.participated ? 'green' : 'red' };
     });
     setMarkedDates(marks);
   };
@@ -54,6 +54,12 @@ export default function EventCalendarScreen() {
           arrowColor: '#002855',
         }}
       />
+       <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => router.push('/events')} // retourne à la liste des événements
+                  >
+                    <Text style={styles.backButtonText}>← Retour à la liste</Text>
+                  </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -82,9 +88,12 @@ export default function EventCalendarScreen() {
                   <Text style={[styles.status, { color: ev.participated ? 'green' : 'red' }]}>
                     {ev.participated ? '✅ Participé' : '❌ Non participé'}
                   </Text>
+                 
                 </View>
               ))}
             </ScrollView>
+
+
 
             <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Fermer</Text>
@@ -97,7 +106,7 @@ export default function EventCalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#001F3F', padding: 10 },
+  container: { flex: 1, backgroundColor: '#0D1B2A', padding: 10 },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -118,7 +127,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   weatherBox: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#fffefeff',
     padding: 10,
     borderRadius: 10,
     marginBottom: 15,
@@ -128,20 +137,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#002855',
   },
-  eventCard: {
-    backgroundColor: '#F8F9FA',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#DAA520',
-  },
-  eventTitle: { fontSize: 16, fontWeight: 'bold', color: '#002855' },
-  eventDescription: { fontSize: 14, color: '#333', marginTop: 4 },
-  cityText: { fontSize: 14, color: '#555', marginTop: 4 },
-  status: { marginTop: 6, fontWeight: '600' },
+ 
+ eventCard: {
+  backgroundColor: '#F8F9FA',
+  padding: 12,
+  borderRadius: 12,
+  marginBottom: 12,
+  borderLeftWidth: 4,
+  borderLeftColor: '#dddcdaff',
+
+  // Centrer le contenu
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  // Ombre iOS
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 6,
+
+  // Ombre Android
+  elevation: 5,
+},
+eventTitle: { 
+  fontSize: 16, 
+  fontWeight: 'bold', 
+  color: '#002855', 
+  textAlign: 'center' // centrage horizontal
+},
+eventDescription: { 
+  fontSize: 14, 
+  color: '#333', 
+  marginTop: 4, 
+  textAlign: 'center'
+},
+cityText: { 
+  fontSize: 14, 
+  color: '#555', 
+  marginTop: 4, 
+  textAlign: 'center'
+},
+status: { 
+  marginTop: 6, 
+  fontWeight: '600',
+  textAlign: 'center'
+},
+
   closeButton: {
-    backgroundColor: '#DAA520',
+    backgroundColor: '#aeaeadff',
     borderRadius: 8,
     paddingVertical: 10,
     marginTop: 15,
@@ -151,6 +194,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  backButton: {
+    backgroundColor: '#415A77',
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 
