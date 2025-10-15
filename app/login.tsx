@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { validateUser, storeLoggedUser } from './services/auth';
+import { validateUser, storeLoggedUser } from '../app/services/auth';
 import { theme } from '../assets/styles/theme';
 
 export default function LoginScreen() {

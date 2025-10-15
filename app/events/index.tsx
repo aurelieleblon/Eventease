@@ -1,15 +1,17 @@
 import { useState, useCallback } from 'react';
-import { View, FlatList, TouchableOpacity, Text } from 'react-native';
+import { View, FlatList, TouchableOpacity, Text, TextInput } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import EventItem from '../../components/EventItem';
 import EmptyState from '../../components/EmptyState';
 import { getEvents, deleteEvent, toggleParticipation, Event } from '../../utils/storage';
-import { clearLoggedUser } from '../../services/auth';
+import { clearLoggedUser } from '../services/auth';
 import { theme } from '../../assets/styles/theme';
 
 export default function EventListScreen() {
   const [events, setEvents] = useState<Event[]>([]);
   const [message, setMessage] = useState('');
+  const [filter, setFilter] = useState<'all' | 'participated' | 'notParticipated'>('all');
+  const [cityFilter, setCityFilter] = useState('');
   const router = useRouter();
 
   const loadEvents = async () => {
@@ -50,9 +52,17 @@ export default function EventListScreen() {
     router.replace('/login');
   };
 
+  // 🔹 Filtrage des événements
+  const filteredEvents = events.filter(ev => {
+    if (filter === 'participated' && !ev.participated) return false;
+    if (filter === 'notParticipated' && ev.participated) return false;
+    if (cityFilter && !ev.city?.toLowerCase().includes(cityFilter.toLowerCase())) return false;
+    return true;
+  });
+
   return (
     <View style={theme.container}>
-      {/* 🔹 Bouton Déconnexion */}
+      {/* 🔹 Déconnexion */}
       <TouchableOpacity style={theme.logoutButton} onPress={handleLogout}>
         <Text style={theme.logoutText}>Se déconnecter</Text>
       </TouchableOpacity>
@@ -60,10 +70,37 @@ export default function EventListScreen() {
       {/* 🔹 Message */}
       {message ? <Text style={theme.message}>{message}</Text> : null}
 
-      {/* 🔹 Liste ou message vide */}
-      {events.length > 0 ? (
+      {/* 🔹 Filtres */}
+      <View style={{ flexDirection: 'row', marginVertical: 10 }}>
+        <TouchableOpacity onPress={() => setFilter('all')} style={{ marginRight: 5 }}>
+          <Text style={{ color: filter === 'all' ? '#DAA520' : '#fff' }}>Tous</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('participated')} style={{ marginRight: 5 }}>
+          <Text style={{ color: filter === 'participated' ? '#DAA520' : '#fff' }}>✅ Participé</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('notParticipated')}>
+          <Text style={{ color: filter === 'notParticipated' ? '#DAA520' : '#fff' }}>❌ Non participé</Text>
+        </TouchableOpacity>
+      </View>
+
+     <TextInput
+       placeholder="Filtrer par ville"
+       placeholderTextColor="#ccc" // couleur du texte du placeholder
+       value={cityFilter}
+       onChangeText={setCityFilter}
+       style={{
+         borderWidth: 1,
+         borderColor: '#ccc',
+         padding: 5,
+         marginBottom: 10,
+         color: '#fff' // texte saisi en blanc
+       }}
+     />
+
+      {/* 🔹 Liste des événements */}
+      {filteredEvents.length > 0 ? (
         <FlatList
-          data={events}
+          data={filteredEvents}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <EventItem
@@ -86,10 +123,6 @@ export default function EventListScreen() {
       <TouchableOpacity style={theme.button} onPress={() => router.push('/events/calendar')}>
         <Text style={theme.buttonText}>Voir le calendrier</Text>
       </TouchableOpacity>
-
-          </View>
+    </View>
   );
 }
-
-
-

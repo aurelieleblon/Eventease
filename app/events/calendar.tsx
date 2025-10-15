@@ -3,7 +3,7 @@ import { View, Text, Modal, Pressable, StyleSheet, ScrollView, Image, TouchableO
 import { router, useFocusEffect } from 'expo-router';
 import { Calendar, DateData } from 'react-native-calendars';
 import { getEvents, Event } from '../../utils/storage';
-import { getWeather } from '../../services/weather';
+import { getWeather } from '../services/weather';
 import { getUserLocation, getDistanceFromLatLonInKm } from '../services/location';
 
 export default function EventCalendarScreen() {
@@ -45,7 +45,7 @@ export default function EventCalendarScreen() {
       setModalVisible(true);
 
       // Récupération météo pour la première ville trouvée
-      const firstCity = dayEvents[0].city || 'Paris'; 
+      const firstCity = dayEvents[0].city || 'Paris';
       const weatherData = await getWeather(firstCity);
       setWeather(weatherData);
     }

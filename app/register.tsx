@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { saveUser } from './services/auth';
+import { saveUser } from '../app/services/auth';
 import { theme } from '../assets/styles/theme';
 
 export default function RegisterScreen() {
