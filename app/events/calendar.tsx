@@ -3,7 +3,8 @@ import { View, Text, Modal, Pressable, StyleSheet, ScrollView, Image, TouchableO
 import { router, useFocusEffect } from 'expo-router';
 import { Calendar, DateData } from 'react-native-calendars';
 import { getEvents, Event } from '../../utils/storage';
-import { getWeather } from '../services/weather'; // ← importe ici
+import { getWeather } from '../../services/weather';
+import { getUserLocation, getDistanceFromLatLonInKm } from '../services/location';
 
 export default function EventCalendarScreen() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -12,6 +13,7 @@ export default function EventCalendarScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [weather, setWeather] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const loadEvents = async () => {
     const data = await getEvents();
@@ -27,6 +29,13 @@ export default function EventCalendarScreen() {
 
   useFocusEffect(useCallback(() => { loadEvents(); }, []));
 
+  useEffect(() => {
+    (async () => {
+      const location = await getUserLocation();
+      setUserLocation(location);
+    })();
+  }, []);
+
   const handleDayPress = async (day: DateData) => {
     const dayEvents = events.filter(ev => ev.date === day.dateString);
 
@@ -36,7 +45,7 @@ export default function EventCalendarScreen() {
       setModalVisible(true);
 
       // Récupération météo pour la première ville trouvée
-      const firstCity = dayEvents[0].city || 'Paris'; // <-- valeur par défaut
+      const firstCity = dayEvents[0].city || 'Paris'; 
       const weatherData = await getWeather(firstCity);
       setWeather(weatherData);
     }
@@ -54,17 +63,18 @@ export default function EventCalendarScreen() {
           arrowColor: '#002855',
         }}
       />
-       <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.push('/events')} // retourne à la liste des événements
-                  >
-                    <Text style={styles.backButtonText}>← Retour à la liste</Text>
-                  </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push('/events')}
+      >
+        <Text style={styles.backButtonText}>← Retour à la liste</Text>
+      </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>🎶 Événements du {selectedDate}</Text>
+            <Text style={styles.modalTitle}> Événements du {selectedDate}</Text>
 
             {/* SECTION MÉTÉO */}
             {weather && (
@@ -85,15 +95,25 @@ export default function EventCalendarScreen() {
                   <Text style={styles.eventTitle}>{ev.title}</Text>
                   {ev.description ? <Text style={styles.eventDescription}>{ev.description}</Text> : null}
                   {ev.city ? <Text style={styles.cityText}>📍 {ev.city}</Text> : null}
+
+                  {/* Distance utilisateur → événement */}
+                  {userLocation && ev.latitude && ev.longitude && (
+                    <Text style={{ marginTop: 4, fontWeight: '500' }}>
+                      📏 {getDistanceFromLatLonInKm(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        ev.latitude,
+                        ev.longitude
+                      ).toFixed(2)} km
+                    </Text>
+                  )}
+
                   <Text style={[styles.status, { color: ev.participated ? 'green' : 'red' }]}>
                     {ev.participated ? '✅ Participé' : '❌ Non participé'}
                   </Text>
-                 
                 </View>
               ))}
             </ScrollView>
-
-
 
             <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Fermer</Text>
@@ -137,52 +157,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#002855',
   },
- 
- eventCard: {
-  backgroundColor: '#F8F9FA',
-  padding: 12,
-  borderRadius: 12,
-  marginBottom: 12,
-  borderLeftWidth: 4,
-  borderLeftColor: '#dddcdaff',
-
-  // Centrer le contenu
-  alignItems: 'center',
-  justifyContent: 'center',
-
-  // Ombre iOS
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 6,
-
-  // Ombre Android
-  elevation: 5,
-},
-eventTitle: { 
-  fontSize: 16, 
-  fontWeight: 'bold', 
-  color: '#002855', 
-  textAlign: 'center' // centrage horizontal
-},
-eventDescription: { 
-  fontSize: 14, 
-  color: '#333', 
-  marginTop: 4, 
-  textAlign: 'center'
-},
-cityText: { 
-  fontSize: 14, 
-  color: '#555', 
-  marginTop: 4, 
-  textAlign: 'center'
-},
-status: { 
-  marginTop: 6, 
-  fontWeight: '600',
-  textAlign: 'center'
-},
-
+  eventCard: {
+    backgroundColor: '#F8F9FA',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#dddcdaff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#002855',
+    textAlign: 'center',
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: '#333',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  cityText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  status: {
+    marginTop: 6,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   closeButton: {
     backgroundColor: '#aeaeadff',
     borderRadius: 8,
@@ -209,4 +221,3 @@ status: {
     textAlign: 'center',
   },
 });
-

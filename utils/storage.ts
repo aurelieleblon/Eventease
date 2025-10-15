@@ -10,6 +10,8 @@ export interface Event {
   date: string;       // format YYYY-MM-DD
   participated?: boolean;
   city?: string; 
+  latitude?: number; 
+  longitude?: number
 }
 
 // Récupérer tous les événements

@@ -21,6 +21,9 @@ export default function EventItem({ event, onMarkParticipated, onDelete, onEdit 
       {/* Date */}
       <Text style={theme.cardDate}>📅 {event.date}</Text>
 
+      {/* Ville */}
+      {event.city ? <Text style={theme.cityText}>📍 {event.city}</Text> : null}
+
       {/* Statut participation */}
       <Text
         style={event.participated ? theme.participatedBadge : theme.notParticipatedBadge}
@@ -33,28 +36,52 @@ export default function EventItem({ event, onMarkParticipated, onDelete, onEdit 
         {!event.participated && (
           <TouchableOpacity
             onPress={onMarkParticipated}
-            style={[theme.button, { flex: 1, marginRight: 5, backgroundColor: '#7FB77E' }]} // vert doux
+            style={[
+              theme.button,
+              {
+                flex: 1,
+                marginRight: 5,
+                paddingVertical: 4,
+                backgroundColor: '#7FB77E',
+              },
+            ]}
           >
-            <Text style={theme.buttonText}>Participé</Text>
+            <Text style={[theme.buttonText, { fontSize: 12 }]}>Participé</Text>
           </TouchableOpacity>
         )}
 
         {onEdit && (
           <TouchableOpacity
             onPress={onEdit}
-            style={[theme.button, { flex: 1, marginRight: 5, backgroundColor: '#6b92c0ff' }]}
+            style={[
+              theme.button,
+              {
+                flex: 1,
+                marginRight: 5,
+                paddingVertical: 4,
+                backgroundColor: '#6b92c0ff',
+              },
+            ]}
           >
-            <Text style={theme.buttonText}>Modifier</Text>
+            <Text style={[theme.buttonText, { fontSize: 12 }]}>Modifier</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
           onPress={onDelete}
-          style={[theme.button, { flex: 1, backgroundColor: '#D77C6B' }]} // rouge doux
+          style={[
+            theme.button,
+            {
+              flex: 1,
+              paddingVertical: 4,
+              backgroundColor: '#D77C6B',
+            },
+          ]}
         >
-          <Text style={theme.buttonText}>Supprimer</Text>
+          <Text style={[theme.buttonText, { fontSize: 12 }]}>Supprimer</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+

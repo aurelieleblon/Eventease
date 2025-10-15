@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { getEvents, updateEvent, Event } from '../../utils/storage';
 import { theme } from '../../assets/styles/theme';
 
@@ -9,7 +10,9 @@ export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
+  const [city, setCity] = useState('');
+  const [date, setDate] = useState(new Date()); // <-- stocke en Date
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -20,7 +23,8 @@ export default function EditEventScreen() {
       if (!ev) return;
       setTitle(ev.title);
       setDescription(ev.description || '');
-      setDate(ev.date);
+      setCity(ev.city || '');
+      setDate(new Date(ev.date)); // <-- convertit la string en Date
     };
     loadEvent();
   }, [id]);
@@ -29,13 +33,19 @@ export default function EditEventScreen() {
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!title || !date) {
-      setErrorMessage('Veuillez remplir le titre et la date.');
+    if (!title || !city || !date) {
+      setErrorMessage('Veuillez remplir le titre, la ville et la date.');
       return;
     }
 
     try {
-      const updatedEvent: Event = { id: id as string, title, description, date };
+      const updatedEvent: Event = { 
+        id: id as string, 
+        title, 
+        description, 
+        city, 
+        date: date.toISOString().split('T')[0] // <-- format YYYY-MM-DD
+      };
       await updateEvent(updatedEvent);
 
       setSuccessMessage('🎉 Événement modifié !');
@@ -44,6 +54,13 @@ export default function EditEventScreen() {
       console.error(error);
       setErrorMessage('Impossible de modifier l’événement.');
     }
+  };
+
+  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === 'set' && selectedDate) {
+      setDate(selectedDate);
+    }
+    setShowDatePicker(Platform.OS === 'ios'); // sur iOS, le picker reste visible
   };
 
   return (
@@ -67,20 +84,34 @@ export default function EditEventScreen() {
       />
 
       <TextInput
-        placeholder="Date (YYYY-MM-DD)"
+        placeholder="Ville"
         placeholderTextColor="#555"
         style={theme.input}
-        value={date}
-        onChangeText={setDate}
+        value={city}
+        onChangeText={setCity}
       />
 
-      {errorMessage ? (
-        <Text style={[theme.notParticipatedBadge, { textAlign: 'center' }]}>{errorMessage}</Text>
-      ) : null}
+      {/* DatePicker */}
+      <TouchableOpacity
+        style={[theme.input, { justifyContent: 'center' }]}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={{ color: '#000' }}>📅 {date.toISOString().split('T')[0]}</Text>
+      </TouchableOpacity>
 
-      {successMessage ? (
-        <Text style={[theme.participatedBadge, { textAlign: 'center' }]}>{successMessage}</Text>
-      ) : null}
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+          minimumDate={new Date(2020, 0, 1)}
+          maximumDate={new Date(2035, 11, 31)}
+        />
+      )}
+
+      {errorMessage ? <Text style={[theme.notParticipatedBadge, { textAlign: 'center' }]}>{errorMessage}</Text> : null}
+      {successMessage ? <Text style={[theme.participatedBadge, { textAlign: 'center' }]}>{successMessage}</Text> : null}
 
       <TouchableOpacity style={theme.button} onPress={handleSave}>
         <Text style={theme.buttonText}>Enregistrer</Text>

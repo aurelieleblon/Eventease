@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import EventItem from '../../components/EventItem';
 import EmptyState from '../../components/EmptyState';
 import { getEvents, deleteEvent, toggleParticipation, Event } from '../../utils/storage';
-import { clearLoggedUser } from '../services/auth';
+import { clearLoggedUser } from '../../services/auth';
 import { theme } from '../../assets/styles/theme';
 
 export default function EventListScreen() {
@@ -87,16 +87,7 @@ export default function EventListScreen() {
         <Text style={theme.buttonText}>Voir le calendrier</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={theme.button}
-        onPress={async () => {
-          const events = await getEvents();
-          console.log('Événements AsyncStorage →', events);
-        }}
-      >
-        <Text style={theme.buttonText}>Voir les événements dans la console</Text>
-      </TouchableOpacity>
-    </View>
+          </View>
   );
 }
 
