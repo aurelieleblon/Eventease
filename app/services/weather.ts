@@ -1,5 +1,5 @@
 // utils/weather.ts
-const API_KEY = '87607f398bbf24869160e3df39cb694e'; // <-- remplace ici ta clé personnelle
+const API_KEY = '87607f398bbf24869160e3df39cb694e';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export const getWeather = async (city: string, date?: string) => {

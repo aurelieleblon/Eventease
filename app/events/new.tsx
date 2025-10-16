@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { addEvent } from '../../utils/storage';
 import { theme } from '../../assets/styles/theme';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-
+import * as Location from 'expo-location';
 
 export default function NewEventScreen() {
   const [title, setTitle] = useState('');
@@ -19,19 +19,30 @@ export default function NewEventScreen() {
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!title || !date) {
-      setErrorMessage('Veuillez remplir le titre et la date.');
+    if (!title || !date || !city) {
+      setErrorMessage('Veuillez remplir le titre, la date et la ville.');
       return;
     }
 
     const formattedDate = date.toISOString().split('T')[0];
 
     try {
+      // 🔹 Géocodage de la ville
+      const geocode = await Location.geocodeAsync(city.trim());
+      if (geocode.length === 0) {
+        setErrorMessage("Ville introuvable, veuillez vérifier l'orthographe !");
+        return;
+      }
+
+      const coords = { latitude: geocode[0].latitude, longitude: geocode[0].longitude };
+
       await addEvent({
         title,
         description,
         date: formattedDate,
-        city,
+        city: city.trim(),
+        latitude: coords.latitude,
+        longitude: coords.longitude,
         participated: false,
       });
 
@@ -47,12 +58,12 @@ export default function NewEventScreen() {
     }
   };
 
- const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-  if (event.type === 'set' && selectedDate) {
-    setDate(selectedDate);
-  }
-  setShowDatePicker(Platform.OS === 'ios');
-};
+  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === 'set' && selectedDate) {
+      setDate(selectedDate);
+    }
+    setShowDatePicker(Platform.OS === 'ios');
+  };
 
   return (
     <View style={[theme.container, { justifyContent: 'center' }]}>
@@ -82,7 +93,6 @@ export default function NewEventScreen() {
         onChangeText={setCity}
       />
 
-      {/* Sélecteur de date */}
       <TouchableOpacity
         style={[theme.input, { justifyContent: 'center' }]}
         onPress={() => setShowDatePicker(true)}
@@ -98,7 +108,7 @@ export default function NewEventScreen() {
           mode="date"
           display="default"
           onChange={onChangeDate}
-          minimumDate={new Date(2020, 0, 1)}
+          minimumDate={new Date()}
           maximumDate={new Date(2035, 11, 31)}
         />
       )}
@@ -112,4 +122,5 @@ export default function NewEventScreen() {
     </View>
   );
 }
+
 

@@ -32,24 +32,68 @@ export default function EventCalendarScreen() {
   useEffect(() => {
     (async () => {
       const location = await getUserLocation();
+      console.log('📍 Localisation récupérée :', location);
       setUserLocation(location);
     })();
   }, []);
 
-  const handleDayPress = async (day: DateData) => {
-    const dayEvents = events.filter(ev => ev.date === day.dateString);
-
-    if (dayEvents.length > 0) {
-      setSelectedDate(day.dateString);
-      setSelectedDayEvents(dayEvents);
-      setModalVisible(true);
-
-      // Récupération météo pour la première ville trouvée
-      const firstCity = dayEvents[0].city || 'Paris';
-      const weatherData = await getWeather(firstCity);
-      setWeather(weatherData);
+  useEffect(() => {
+    if (userLocation && selectedDayEvents.length > 0) {
+      const updatedEvents = selectedDayEvents.map(ev => ({
+        ...ev,
+        distanceKm:
+          ev.latitude && ev.longitude
+            ? getDistanceFromLatLonInKm(
+                userLocation.latitude,
+                userLocation.longitude,
+                ev.latitude,
+                ev.longitude
+              )
+            : null,
+      }));
+      setSelectedDayEvents(updatedEvents);
     }
-  };
+  }, [userLocation]);
+
+ const handleDayPress = async (day: DateData) => {
+   // Filtrer les événements pour la date sélectionnée
+   let dayEvents = events.filter(ev => ev.date === day.dateString);
+
+   if (dayEvents.length === 0) return; // Aucun événement ce jour-là
+
+   // 🔹 Vérifier la localisation utilisateur
+   if (!userLocation) {
+     console.log('⚠️ Localisation utilisateur non disponible');
+   }
+   const loc = userLocation;
+
+   // 🔹 Calculer les distances uniquement si la localisation et les coordonnées de l'événement existent
+   dayEvents = dayEvents.map(ev => ({
+     ...ev,
+     distanceKm:
+       loc && typeof ev.latitude === 'number' && typeof ev.longitude === 'number'
+         ? getDistanceFromLatLonInKm(
+             loc.latitude,
+             loc.longitude,
+             ev.latitude,
+             ev.longitude
+           )
+         : null,
+   }));
+
+   console.log('📏 Distances calculées :', dayEvents.map(ev => ev.distanceKm));
+
+   // 🔹 Mettre à jour l'état pour le modal
+   setSelectedDate(day.dateString);
+   setSelectedDayEvents(dayEvents);
+   setModalVisible(true);
+
+   // 🔹 Récupération météo pour la première ville
+   const firstCity = dayEvents[0].city || 'Paris';
+   const weatherData = await getWeather(firstCity);
+   setWeather(weatherData);
+ };
+
 
   return (
     <View style={styles.container}>
@@ -64,19 +108,15 @@ export default function EventCalendarScreen() {
         }}
       />
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push('/events')}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/events')}>
         <Text style={styles.backButtonText}>← Retour à la liste</Text>
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}> Événements du {selectedDate}</Text>
+            <Text style={styles.modalTitle}>Événements du {selectedDate}</Text>
 
-            {/* SECTION MÉTÉO */}
             {weather && (
               <View style={styles.weatherBox}>
                 <Text style={styles.weatherText}>
@@ -96,15 +136,9 @@ export default function EventCalendarScreen() {
                   {ev.description ? <Text style={styles.eventDescription}>{ev.description}</Text> : null}
                   {ev.city ? <Text style={styles.cityText}>📍 {ev.city}</Text> : null}
 
-                  {/* Distance utilisateur → événement */}
-                  {userLocation && ev.latitude && ev.longitude && (
+                  {ev.distanceKm != null && (
                     <Text style={{ marginTop: 4, fontWeight: '500' }}>
-                      📏 {getDistanceFromLatLonInKm(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        ev.latitude,
-                        ev.longitude
-                      ).toFixed(2)} km
+                      📏 {ev.distanceKm.toFixed(2)} km
                     </Text>
                   )}
 
