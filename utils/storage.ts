@@ -9,9 +9,10 @@ export interface Event {
   description?: string;
   date: string;       // format YYYY-MM-DD
   participated?: boolean;
-  city?: string; 
+  city?: string;
+  category?: 'conf' | 'atelier' | 'sortie';
   latitude?: number; 
-  longitude?: number
+  longitude?: number;
 }
 
 // Récupérer tous les événements

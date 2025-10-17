@@ -63,7 +63,7 @@ export default function EventCalendarScreen() {
 
    // 🔹 Vérifier la localisation utilisateur
    if (!userLocation) {
-     console.log('⚠️ Localisation utilisateur non disponible');
+     console.log('Localisation utilisateur non disponible');
    }
    const loc = userLocation;
 
@@ -81,14 +81,13 @@ export default function EventCalendarScreen() {
          : null,
    }));
 
-   console.log('📏 Distances calculées :', dayEvents.map(ev => ev.distanceKm));
 
-   // 🔹 Mettre à jour l'état pour le modal
+   // Mettre à jour l'état pour le modal
    setSelectedDate(day.dateString);
    setSelectedDayEvents(dayEvents);
    setModalVisible(true);
 
-   // 🔹 Récupération météo pour la première ville
+   // Récupération météo
    const firstCity = dayEvents[0].city || 'Paris';
    const weatherData = await getWeather(firstCity);
    setWeather(weatherData);
